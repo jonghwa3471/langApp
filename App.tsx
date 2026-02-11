@@ -18,33 +18,37 @@ const AnimatedBox = Animated.createAnimatedComponent(Box);
 
 export default function App() {
   const [up, setUp] = useState(false);
-  const Y_POSITION = useRef(new Animated.Value(300)).current;
+  const position = useRef(new Animated.ValueXY({ x: 0, y: 300 })).current;
   const toggleUp = () => setUp((prev) => !prev);
   const moveUp = () => {
-    Animated.timing(Y_POSITION, {
+    Animated.timing(position, {
       toValue: up ? 300 : -300,
       useNativeDriver: true,
       easing: Easing.ease,
       duration: 1000,
     }).start(toggleUp);
   };
-  const opacity = Y_POSITION.interpolate({
-    inputRange: [-300, 0, 300],
-    outputRange: [1, 0.5, 1],
+  const rotation = position.y.interpolate({
+    inputRange: [-300, 300],
+    outputRange: ["-360deg", "360deg"],
   });
-  const borderRadius = Y_POSITION.interpolate({
+  const borderRadius = position.y.interpolate({
     inputRange: [-300, 300],
     outputRange: [100, 0],
   });
-  Y_POSITION.addListener(() => console.log(opacity));
+  const backgroundColor = position.y.interpolate({
+    inputRange: [-300, 300],
+    outputRange: ["rgb(255, 99, 71)", "rgb(71, 166, 255)"],
+  });
+  position.addListener(() => console.log(rotation));
   return (
     <Container>
       <AnimatedBox
         onPress={moveUp}
         style={{
-          opacity,
-          transform: [{ translateY: Y_POSITION }],
+          transform: [{ translateY: position.y }, { rotate: rotation }],
           borderRadius,
+          backgroundColor,
         }}
       />
     </Container>
