@@ -1,4 +1,5 @@
-import { Animated } from "react-native";
+import { useRef, useState } from "react";
+import { Animated, Easing, TouchableOpacity } from "react-native";
 import styled from "styled-components/native";
 
 const Container = styled.View`
@@ -7,7 +8,7 @@ const Container = styled.View`
   align-items: center;
 `;
 
-const Box = styled.TouchableOpacity`
+const Box = styled.View`
   background-color: tomato;
   width: 200px;
   height: 200px;
@@ -16,21 +17,23 @@ const Box = styled.TouchableOpacity`
 const AnimatedBox = Animated.createAnimatedComponent(Box);
 
 export default function App() {
-  const Y = new Animated.Value(0);
+  const [up, setUp] = useState(false);
+  const Y = useRef(new Animated.Value(0)).current;
+  const toggleUp = () => setUp((prev) => !prev);
   const moveUp = () => {
-    Animated.spring(Y, {
-      toValue: 200,
+    Animated.timing(Y, {
+      toValue: up ? -200 : 200,
       useNativeDriver: true,
-      bounciness: 20,
-    }).start();
+      easing: Easing.cubic,
+    }).start(toggleUp);
   };
-  Y.addListener(() => console.log(Y));
   return (
     <Container>
-      <AnimatedBox
-        onPress={moveUp}
-        style={{ transform: [{ translateY: Y }] }}
-      />
+      <Animated.View style={{ transform: [{ translateY: Y }] }}>
+        <TouchableOpacity onPress={moveUp}>
+          <Box />
+        </TouchableOpacity>
+      </Animated.View>
     </Container>
   );
 }
