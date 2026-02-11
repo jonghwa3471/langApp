@@ -1,10 +1,34 @@
-import { Text, View } from "react-native";
-import styled from "styled-components";
+import { useEffect, useState } from "react";
+import styled from "styled-components/native";
+
+const Container = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+`;
+
+const Box = styled.TouchableOpacity`
+  background-color: tomato;
+  width: 200px;
+  height: 200px;
+`;
 
 export default function App() {
+  const [y, setY] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
+  const moveUp = () => {
+    const id = setInterval(() => setY((prev) => prev + 1), 10);
+    setIntervalId(id);
+  };
+  useEffect(() => {
+    if (y === 200) {
+      clearInterval(intervalId);
+    }
+  }, [y, intervalId]);
+  console.log("rendering");
   return (
-    <View>
-      <Text style={{ fontSize: 80 }}>hi!!</Text>
-    </View>
+    <Container>
+      <Box onPress={moveUp} style={{ transform: [{ translateY: y }] }} />
+    </Container>
   );
 }
