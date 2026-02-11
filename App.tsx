@@ -17,10 +17,20 @@ const AnimatedBox = Animated.createAnimatedComponent(Box);
 
 export default function App() {
   const Y = new Animated.Value(0);
-  const moveUp = () => {};
+  const moveUp = () => {
+    Animated.spring(Y, {
+      toValue: 200,
+      useNativeDriver: true,
+      bounciness: 20,
+    }).start();
+  };
+  Y.addListener(() => console.log(Y));
   return (
     <Container>
-      <Box onPress={moveUp} style={{ transform: [{ translateY: Y }] }} />
+      <AnimatedBox
+        onPress={moveUp}
+        style={{ transform: [{ translateY: Y }] }}
+      />
     </Container>
   );
 }
