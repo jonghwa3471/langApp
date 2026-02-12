@@ -44,6 +44,15 @@ export default function App() {
           y: dy,
         });
       },
+      onPanResponderRelease: () => {
+        Animated.spring(position, {
+          toValue: {
+            x: 0,
+            y: 0,
+          },
+          useNativeDriver: true,
+        }).start();
+      },
     }),
   ).current;
   return (
