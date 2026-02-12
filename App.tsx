@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Animated, Dimensions, Easing } from "react-native";
+import { useRef } from "react";
+import { Animated, PanResponder } from "react-native";
 import styled from "styled-components/native";
 
 const Container = styled.View`
@@ -8,15 +8,13 @@ const Container = styled.View`
   align-items: center;
 `;
 
-const Box = styled.Pressable`
+const Box = styled.View`
   background-color: tomato;
   width: 200px;
   height: 200px;
 `;
 
 const AnimatedBox = Animated.createAnimatedComponent(Box);
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function App() {
   const position = useRef(
@@ -25,40 +23,6 @@ export default function App() {
       y: 0,
     }),
   ).current;
-  const topLeft = Animated.timing(position, {
-    toValue: {
-      x: -SCREEN_WIDTH / 2 + 100,
-      y: -SCREEN_HEIGHT / 2 + 100,
-    },
-    useNativeDriver: true,
-  });
-  const bottomLeft = Animated.timing(position, {
-    toValue: {
-      x: -SCREEN_WIDTH / 2 + 100,
-      y: SCREEN_HEIGHT / 2 - 100,
-    },
-    useNativeDriver: true,
-  });
-  const bottomRight = Animated.timing(position, {
-    toValue: {
-      x: SCREEN_WIDTH / 2 - 100,
-      y: SCREEN_HEIGHT / 2 - 100,
-    },
-    useNativeDriver: true,
-  });
-  const topRight = Animated.timing(position, {
-    toValue: {
-      x: SCREEN_WIDTH / 2 - 100,
-      y: -SCREEN_HEIGHT / 2 + 100,
-    },
-    useNativeDriver: true,
-  });
-  const moveUp = () => {
-    Animated.loop(
-      Animated.sequence([topLeft, bottomLeft, bottomRight, topRight]),
-      { resetBeforeIteration: false },
-    ).start();
-  };
   const rotation = position.y.interpolate({
     inputRange: [-300, 300],
     outputRange: ["-360deg", "360deg"],
@@ -71,11 +35,21 @@ export default function App() {
     inputRange: [-300, 300],
     outputRange: ["rgb(255, 99, 71)", "rgb(71, 166, 255)"],
   });
-  position.addListener(() => console.log());
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, { dx, dy }) => {
+        position.setValue({
+          x: dx,
+          y: dy,
+        });
+      },
+    }),
+  ).current;
   return (
     <Container>
       <AnimatedBox
-        onPress={moveUp}
+        {...panResponder.panHandlers}
         style={{
           transform: [
             ...position.getTranslateTransform(),
