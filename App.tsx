@@ -18,6 +18,21 @@ const Card = styled.View`
   align-items: center;
   border-radius: 12px;
   box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+  position: absolute;
+`;
+
+const CardContainer = styled.View`
+  flex: 3;
+  justify-content: center;
+  align-items: center;
+`;
+
+const Btn = styled.TouchableOpacity``;
+
+const BtnContainer = styled.View`
+  flex-direction: row;
+  gap: 20px;
+  flex: 1;
 `;
 
 const AnimatedCard = Animated.createAnimatedComponent(Card);
@@ -34,6 +49,11 @@ export default function App() {
     outputRange: ["-15deg", "15deg"],
     extrapolate: "extend",
   });
+  const secondScale = position.interpolate({
+    inputRange: [leftDimension, 0, rightDimension],
+    outputRange: [1, 0.7, 1],
+    extrapolate: "clamp",
+  });
 
   const onPressIn = Animated.spring(scale, {
     toValue: 0.85,
@@ -47,6 +67,16 @@ export default function App() {
     toValue: 0,
     useNativeDriver: true,
   });
+  const goLeft = Animated.spring(position, {
+    toValue: -windowWidth - 100,
+    tension: 1,
+    useNativeDriver: true,
+  });
+  const goRight = Animated.spring(position, {
+    toValue: windowWidth + 100,
+    tension: 1,
+    useNativeDriver: true,
+  });
 
   const panResponder = useRef(
     PanResponder.create({
@@ -57,15 +87,9 @@ export default function App() {
       },
       onPanResponderRelease: (_, { dx }) => {
         if (dx < leftDimension) {
-          Animated.spring(position, {
-            toValue: -windowWidth - 100,
-            useNativeDriver: true,
-          }).start();
+          goLeft.start();
         } else if (dx > rightDimension) {
-          Animated.spring(position, {
-            toValue: windowWidth + 100,
-            useNativeDriver: true,
-          }).start();
+          goRight.start();
         } else {
           Animated.parallel([onPressOut, goCenter]).start();
         }
@@ -73,21 +97,37 @@ export default function App() {
     }),
   ).current;
 
+  const pressClose = () => goLeft.start();
+  const pressCheck = () => goRight.start();
+
   return (
     <Container>
-      <AnimatedCard
-        style={{
-          elevation: 10,
-          transform: [
-            { scale },
-            { translateX: position },
-            { rotateZ: rotation },
-          ],
-        }}
-        {...panResponder.panHandlers}
-      >
-        <Ionicons name="pizza" color="#192a56" size={98} />
-      </AnimatedCard>
+      <CardContainer>
+        <AnimatedCard style={{ transform: [{ scale: secondScale }] }}>
+          <Ionicons name="beer" color="#192a56" size={98} />
+        </AnimatedCard>
+        <AnimatedCard
+          style={{
+            elevation: 10,
+            transform: [
+              { scale },
+              { translateX: position },
+              { rotateZ: rotation },
+            ],
+          }}
+          {...panResponder.panHandlers}
+        >
+          <Ionicons name="pizza" color="#192a56" size={98} />
+        </AnimatedCard>
+      </CardContainer>
+      <BtnContainer>
+        <Btn onPress={pressClose}>
+          <Ionicons name="close-circle" color="white" size={58} />
+        </Btn>
+        <Btn onPress={pressCheck}>
+          <Ionicons name="checkmark-circle" color="white" size={58} />
+        </Btn>
+      </BtnContainer>
     </Container>
   );
 }
