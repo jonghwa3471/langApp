@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Animated, Easing } from "react-native";
+import { Animated, Dimensions, Easing } from "react-native";
 import styled from "styled-components/native";
 
 const Container = styled.View`
@@ -16,17 +16,48 @@ const Box = styled.Pressable`
 
 const AnimatedBox = Animated.createAnimatedComponent(Box);
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
 export default function App() {
-  const [up, setUp] = useState(false);
-  const position = useRef(new Animated.ValueXY({ x: 0, y: 300 })).current;
-  const toggleUp = () => setUp((prev) => !prev);
+  const position = useRef(
+    new Animated.ValueXY({
+      x: 0,
+      y: 0,
+    }),
+  ).current;
+  const topLeft = Animated.timing(position, {
+    toValue: {
+      x: -SCREEN_WIDTH / 2 + 100,
+      y: -SCREEN_HEIGHT / 2 + 100,
+    },
+    useNativeDriver: true,
+  });
+  const bottomLeft = Animated.timing(position, {
+    toValue: {
+      x: -SCREEN_WIDTH / 2 + 100,
+      y: SCREEN_HEIGHT / 2 - 100,
+    },
+    useNativeDriver: true,
+  });
+  const bottomRight = Animated.timing(position, {
+    toValue: {
+      x: SCREEN_WIDTH / 2 - 100,
+      y: SCREEN_HEIGHT / 2 - 100,
+    },
+    useNativeDriver: true,
+  });
+  const topRight = Animated.timing(position, {
+    toValue: {
+      x: SCREEN_WIDTH / 2 - 100,
+      y: -SCREEN_HEIGHT / 2 + 100,
+    },
+    useNativeDriver: true,
+  });
   const moveUp = () => {
-    Animated.timing(position, {
-      toValue: up ? 300 : -300,
-      useNativeDriver: true,
-      easing: Easing.ease,
-      duration: 1000,
-    }).start(toggleUp);
+    Animated.loop(
+      Animated.sequence([topLeft, bottomLeft, bottomRight, topRight]),
+      { resetBeforeIteration: false },
+    ).start();
   };
   const rotation = position.y.interpolate({
     inputRange: [-300, 300],
@@ -40,13 +71,16 @@ export default function App() {
     inputRange: [-300, 300],
     outputRange: ["rgb(255, 99, 71)", "rgb(71, 166, 255)"],
   });
-  position.addListener(() => console.log(rotation));
+  position.addListener(() => console.log());
   return (
     <Container>
       <AnimatedBox
         onPress={moveUp}
         style={{
-          transform: [{ translateY: position.y }, { rotate: rotation }],
+          transform: [
+            ...position.getTranslateTransform(),
+            { rotate: rotation },
+          ],
           borderRadius,
           backgroundColor,
         }}
