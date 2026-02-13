@@ -1,145 +1,114 @@
-import { Animated, Dimensions, PanResponder } from "react-native";
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRef, useState } from "react";
 import icons from "./icons";
+import { useRef } from "react";
+import { Animated, PanResponder, View } from "react-native";
+
+const BLACK_COLOR = "#1e272e";
+const GRAY = "#485460";
+const GREEN = "#2ecc71";
+const RED = "#e74c3c";
 
 const Container = styled.View`
   flex: 1;
-  background-color: #00a8ff;
+  background-color: ${BLACK_COLOR};
+`;
+
+const Edge = styled.View`
+  flex: 1;
   justify-content: center;
   align-items: center;
 `;
 
-const Card = styled.View`
-  background-color: white;
-  width: 300px;
-  height: 300px;
+const WordContainer = styled(Animated.createAnimatedComponent(View))`
+  width: 100px;
+  height: 100px;
   justify-content: center;
   align-items: center;
-  border-radius: 12px;
-  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
-  position: absolute;
+  border-radius: 50%;
+  background-color: ${GRAY};
 `;
 
-const CardContainer = styled.View`
+const Word = styled.Text<{ $color: string }>`
+  font-size: 38px;
+  font-weight: 500;
+  color: ${(props) => props.$color};
+`;
+
+const Center = styled.View`
   flex: 3;
   justify-content: center;
   align-items: center;
 `;
 
-const Btn = styled.TouchableOpacity``;
-
-const BtnContainer = styled.View`
-  flex-direction: row;
-  gap: 20px;
-  flex: 1;
+const IconCard = styled(Animated.createAnimatedComponent(View))`
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
 `;
-
-const AnimatedCard = Animated.createAnimatedComponent(Card);
-
-const { width: windowWidth } = Dimensions.get("window");
-const leftDimension = -windowWidth / 2 - 20;
-const rightDimension = windowWidth / 2 + 20;
 
 export default function App() {
   const scale = useRef(new Animated.Value(1)).current;
-  const position = useRef(new Animated.Value(0)).current;
-  const rotation = position.interpolate({
-    inputRange: [leftDimension, rightDimension],
-    outputRange: ["-15deg", "15deg"],
-    extrapolate: "extend",
-  });
-  const secondScale = position.interpolate({
-    inputRange: [leftDimension, 0, rightDimension],
-    outputRange: [1, 0.7, 1],
-    extrapolate: "clamp",
-  });
+  const position = useRef(
+    new Animated.ValueXY({
+      x: 0,
+      y: 0,
+    }),
+  ).current;
 
   const onPressIn = Animated.spring(scale, {
-    toValue: 0.85,
+    toValue: 0.9,
     useNativeDriver: true,
   });
+
   const onPressOut = Animated.spring(scale, {
     toValue: 1,
     useNativeDriver: true,
   });
-  const goCenter = Animated.spring(position, {
-    toValue: 0,
+
+  const goHome = Animated.spring(position, {
+    toValue: {
+      x: 0,
+      y: 0,
+    },
     useNativeDriver: true,
-  });
-  const goLeft = Animated.spring(position, {
-    toValue: -windowWidth - 100,
-    tension: 1,
-    useNativeDriver: true,
-    restDisplacementThreshold: 100,
-    restSpeedThreshold: 100,
-  });
-  const goRight = Animated.spring(position, {
-    toValue: windowWidth + 100,
-    tension: 1,
-    useNativeDriver: true,
-    restDisplacementThreshold: 100,
-    restSpeedThreshold: 100,
   });
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => onPressIn.start(),
-      onPanResponderMove: (_, { dx }) => {
-        position.setValue(dx);
+      onPanResponderGrant: () => {
+        onPressIn.start();
       },
-      onPanResponderRelease: (_, { dx }) => {
-        if (dx < leftDimension) {
-          goLeft.start(onDismiss);
-        } else if (dx > rightDimension) {
-          goRight.start(onDismiss);
-        } else {
-          Animated.parallel([onPressOut, goCenter]).start();
-        }
+      onPanResponderMove: (_, { dx, dy }) =>
+        position.setValue({ x: dx, y: dy }),
+      onPanResponderRelease: () => {
+        Animated.parallel([onPressOut, goHome]).start();
       },
     }),
   ).current;
-
-  const pressClose = () => goLeft.start(onDismiss);
-  const pressCheck = () => goRight.start(onDismiss);
-
-  const [index, setIndex] = useState(0);
-  const onDismiss = () => {
-    scale.setValue(1);
-    position.setValue(0);
-    setIndex((prev) => prev + 1);
-  };
-
   return (
     <Container>
-      <CardContainer>
-        <AnimatedCard style={{ transform: [{ scale: secondScale }] }}>
-          <Ionicons name={icons[index + 1] as any} color="#192a56" size={98} />
-        </AnimatedCard>
-        <AnimatedCard
-          style={{
-            elevation: 10,
-            transform: [
-              { scale },
-              { translateX: position },
-              { rotateZ: rotation },
-            ],
-          }}
+      <Edge>
+        <WordContainer>
+          <Word $color={GREEN}>알아</Word>
+        </WordContainer>
+      </Edge>
+      <Center>
+        <IconCard
           {...panResponder.panHandlers}
+          style={{
+            transform: [{ scale }, ...position.getTranslateTransform()],
+          }}
         >
-          <Ionicons name={icons[index] as any} color="#192a56" size={98} />
-        </AnimatedCard>
-      </CardContainer>
-      <BtnContainer>
-        <Btn onPress={pressClose}>
-          <Ionicons name="close-circle" color="white" size={58} />
-        </Btn>
-        <Btn onPress={pressCheck}>
-          <Ionicons name="checkmark-circle" color="white" size={58} />
-        </Btn>
-      </BtnContainer>
+          <Ionicons name="beer" color={GRAY} size={76} />
+        </IconCard>
+      </Center>
+      <Edge>
+        <WordContainer>
+          <Word $color={RED}>몰라</Word>
+        </WordContainer>
+      </Edge>
     </Container>
   );
 }
