@@ -1,7 +1,7 @@
 import styled from "styled-components/native";
 import { Ionicons } from "@expo/vector-icons";
 import icons from "./icons";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Animated, Dimensions, Easing, PanResponder, View } from "react-native";
 
 const BLACK_COLOR = "#1e272e";
@@ -133,13 +133,27 @@ export default function App() {
           Animated.sequence([
             Animated.parallel([onDropOpacity, onDropScale]),
             onDropPosition,
-          ]).start();
+          ]).start(nextIcon);
         } else {
           Animated.parallel([onPressOut, goHome]).start();
         }
       },
     }),
   ).current;
+  const [index, setIndex] = useState(0);
+  const nextIcon = () => {
+    setIndex((prev) => prev + 1);
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+      Animated.spring(opacity, {
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
   return (
     <Container>
       <Edge>
@@ -155,7 +169,7 @@ export default function App() {
             transform: [...position.getTranslateTransform(), { scale }],
           }}
         >
-          <Ionicons name="beer" color={GRAY} size={76} />
+          <Ionicons name={icons[index] as any} color={GRAY} size={76} />
         </IconCard>
       </Center>
       <Edge>
